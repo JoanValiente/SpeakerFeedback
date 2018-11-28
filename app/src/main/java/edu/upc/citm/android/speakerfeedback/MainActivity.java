@@ -62,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
                 Log.e("SpeakerFeedback", "Error al rebre usuaris dins d'un room", e);
                 return;
             }
+            textView.setText(String.format("Nombre d'usuaris: %d", documentSnapshots.size()));
 
             String nomsUsuaris = "";
             for (DocumentSnapshot doc : documentSnapshots){
