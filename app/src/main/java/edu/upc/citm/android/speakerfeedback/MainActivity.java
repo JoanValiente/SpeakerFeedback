@@ -78,20 +78,33 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onStart() {
-        super.onStart();
-
         roomRegistration = db.collection("rooms").document("testroom").addSnapshotListener(roomListener);
 
         userRegistration = db.collection("users").whereEqualTo("rooms", "testroom").addSnapshotListener(usersListener);
+
+        super.onStart();
     }
 
 
     @Override
     protected void onStop() {
-        super.onStop();
 
         roomRegistration.remove();
         userRegistration.remove();
+
+        super.onStop();
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        db.collection("users").document(userId).update("room", FieldValue.delete());
+        super.onDestroy();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
+        super.onSaveInstanceState(outState, outPersistentState);
     }
 
     private void getOrRegisterUser(){
@@ -121,13 +134,6 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(this, "Has de registrar un nom", Toast.LENGTH_SHORT).show();
                     finish();
                 }
-                break;
-            case SHOW_USERS:
-                if(resultCode == RESULT_OK){
-
-                }
-                else
-                    finish();
                 break;
             default:
                 super.onActivityResult(requestCode, resultCode, data);
@@ -164,6 +170,6 @@ public class MainActivity extends AppCompatActivity {
     }
     public void ShowUsers (View view){
         Intent intent = new Intent(this, ShowUsersActivity.class);
-        startActivityForResult(intent, SHOW_USERS);
+        startActivity(intent);
     }
 }
