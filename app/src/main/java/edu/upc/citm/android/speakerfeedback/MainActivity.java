@@ -2,10 +2,12 @@ package edu.upc.citm.android.speakerfeedback;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -15,6 +17,7 @@ import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FieldValue;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.QuerySnapshot;
@@ -25,6 +28,7 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity {
 
     private static final int REGISTER_USER = 0;
+    private static final int SHOW_USERS = 1;
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
     private TextView textView;
     private String userId;
@@ -102,6 +106,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             // Ja està registrat, mostrem el id al Log
             Log.i("SpeakerFeedback", "userId = " + userId);
+            db.collection("users").document(userId).update("room", "testroom");
         }
     }
 
@@ -116,6 +121,13 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(this, "Has de registrar un nom", Toast.LENGTH_SHORT).show();
                     finish();
                 }
+                break;
+            case SHOW_USERS:
+                if(resultCode == RESULT_OK){
+
+                }
+                else
+                    finish();
                 break;
             default:
                 super.onActivityResult(requestCode, resultCode, data);
@@ -137,14 +149,21 @@ public class MainActivity extends AppCompatActivity {
                         .commit();
                 Log.i("SpeakerFeedback", "New user: userId = " + userId);
             }
+
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
                 Log.e("SpeakerFeedback", "Error creant objecte", e);
                 Toast.makeText(MainActivity.this,
                         "No s'ha pogut registrar l'usuari, intenta-ho més tard", Toast.LENGTH_SHORT).show();
+                db.collection("users").document(userId).update("room", "testroom");
                 finish();
             }
         });
+
+    }
+    public void ShowUsers (View view){
+        Intent intent = new Intent(this, ShowUsersActivity.class);
+        startActivityForResult(intent, SHOW_USERS);
     }
 }
