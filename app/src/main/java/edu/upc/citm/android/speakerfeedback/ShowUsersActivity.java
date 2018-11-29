@@ -1,20 +1,20 @@
 package edu.upc.citm.android.speakerfeedback;
 
-import android.support.annotation.NonNull;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-
 import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.ListenerRegistration;
-import com.google.firebase.firestore.EventListener;
 import com.google.firebase.firestore.QuerySnapshot;
 
 import java.util.ArrayList;
@@ -22,29 +22,28 @@ import java.util.List;
 
 public class ShowUsersActivity extends AppCompatActivity {
 
-    private Adapter adapter;
-    private RecyclerView userList;
-    private List<String> users;
-
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
     ListenerRegistration registrationListener;
 
+    private Adapter adapter;
+    private RecyclerView userListView;
+    private List<String> users;
+
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_show_users);
-
         adapter = new Adapter();
-        userList = findViewById(R.id.usersRecyclerView);
-        userList.setLayoutManager(new LinearLayoutManager(this));
-        userList.setAdapter(adapter);
         users = new ArrayList<>();
+
+        userListView = findViewById(R.id.usersRecyclerView);
+        userListView.setLayoutManager(new LinearLayoutManager(this));
+        userListView.setAdapter(adapter);
     }
 
     @Override
     protected void onStart() {
         super.onStart();
-
         registrationListener = db.collection("users").whereEqualTo("room", "testroom").addSnapshotListener(usersListener);
     }
 
@@ -55,25 +54,24 @@ public class ShowUsersActivity extends AppCompatActivity {
     }
 
     class ViewHolder extends RecyclerView.ViewHolder {
-        TextView usersView;
+        TextView view_users;
 
-        public ViewHolder(View view) {
-            super(view);
-            this.usersView = view.findViewById(R.id.usersRecyclerView);
+        public ViewHolder(View itemView) {
+            super(itemView);
+            this.view_users = itemView.findViewById(R.id.user_view);
         }
     }
 
     private EventListener<QuerySnapshot> usersListener = new EventListener<QuerySnapshot>() {
         @Override
         public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
-            if(e != null){
-                Log.e("SpeakerFeedback", "EventListener Error", e);
+            if (e != null) {
+                Log.e("SpeakerFeedback", "Error in ShowAllUserActivity", e);
                 return;
             }
             users.clear();
-            for (DocumentSnapshot doc : documentSnapshots){
+            for (DocumentSnapshot doc : documentSnapshots)
                 users.add(doc.getString("name"));
-            }
             adapter.notifyDataSetChanged();
         }
     };
@@ -82,13 +80,13 @@ public class ShowUsersActivity extends AppCompatActivity {
         @NonNull
         @Override
         public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = getLayoutInflater().inflate(R.layout.user_view, parent, false);
-            return new ViewHolder(view);
+            View itemView = getLayoutInflater().inflate(R.layout.user_view, parent, false);
+            return new ViewHolder(itemView);
         }
 
         @Override
         public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            holder.usersView.setText(users.get(position));
+            holder.view_users.setText(users.get(position));
         }
 
         @Override
@@ -97,3 +95,5 @@ public class ShowUsersActivity extends AppCompatActivity {
         }
     }
 }
+
+
