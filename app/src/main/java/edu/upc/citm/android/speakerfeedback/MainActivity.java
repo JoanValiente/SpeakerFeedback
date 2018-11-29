@@ -286,14 +286,20 @@ public class MainActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         String[] options = new String[polls.get(0).getOptions().size()];
         int i = 0;
-        for(String string: polls.get(0).getOptions()) {
+        for(String string: polls.get(0).getOptions())
+        {
             options[i] = string;
             ++i;
         }
-        builder.setTitle(polls.get(0).getQuestion()).setItems(options, new DialogInterface.OnClickListener() {
+        builder.setTitle(polls.get(0).getQuestion()).setItems(options, new DialogInterface.OnClickListener()
+        {
             @Override
-            public void onClick(DialogInterface dialog, int which) {
-
+            public void onClick(DialogInterface dialog, int which)
+            {
+                Map<String,Object> map = new HashMap<>();
+                map.put("pollid", polls.get(0).getHash_question());
+                map.put("option", which);
+                db.collection("rooms").document("testroom").collection("votes").document(userId).set(map);
             }
         });
         AlertDialog dialog = builder.create();
