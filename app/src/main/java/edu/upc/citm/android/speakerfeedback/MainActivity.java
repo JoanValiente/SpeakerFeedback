@@ -11,6 +11,9 @@ import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentReference;
@@ -34,6 +37,8 @@ public class MainActivity extends AppCompatActivity {
     private String userId;
     private ListenerRegistration roomRegistration;
     private ListenerRegistration userRegistration;
+    private ListenerRegistration pollsRegistration;
+    private List<Poll> polls;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,11 +81,28 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    private EventListener<QuerySnapshot> pollsListener = new EventListener<QuerySnapshot>()
+    {
+        @Override
+        public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e)
+        {
+            polls = new ArrayList<>();
+
+            for(DocumentSnapshot doc : documentSnapshots)
+            {
+                Poll poll = doc.toObject(Poll.class);
+                polls.add(poll);
+            }
+        }
+    };
+
     @Override
     protected void onStart() {
         roomRegistration = db.collection("rooms").document("testroom").addSnapshotListener(roomListener);
 
         userRegistration = db.collection("users").whereEqualTo("rooms", "testroom").addSnapshotListener(usersListener);
+
+        pollsRegistration =  db.collection("rooms").document("testroom").collection("polls").addSnapshotListener(pollsListener);
 
         super.onStart();
     }
