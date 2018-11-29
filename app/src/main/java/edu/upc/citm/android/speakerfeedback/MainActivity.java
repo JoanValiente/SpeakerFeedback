@@ -38,9 +38,8 @@ import java.util.Map;
 public class MainActivity extends AppCompatActivity {
 
     private static final int REGISTER_USER = 0;
-    private static final int SHOW_USERS = 1;
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
-    private TextView textView;
+    private TextView numUsers;
     private String userId;
     private ListenerRegistration roomRegistration;
     private ListenerRegistration userRegistration;
@@ -55,13 +54,12 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        textView = findViewById(R.id.textView);
 
         adapter = new Adapter();
         polls_views = findViewById(R.id.polsView);
         polls_views.setLayoutManager(new LinearLayoutManager(this));
         polls_views.setAdapter(adapter);
-        textView = findViewById(R.id.num_users_view);
+        numUsers = findViewById(R.id.num_users_view);
         vote_button = findViewById(R.id.vote_btn);
 
         getOrRegisterUser();
@@ -86,13 +84,13 @@ public class MainActivity extends AppCompatActivity {
                 Log.e("SpeakerFeedback", "Error al rebre usuaris dins d'un room", e);
                 return;
             }
-            textView.setText(String.format("Nombre d'usuaris: %d", documentSnapshots.size()));
+            numUsers.setText(String.format("Nombre d'usuaris: %d", documentSnapshots.size()));
 
             String nomsUsuaris = "";
             for (DocumentSnapshot doc : documentSnapshots){
                 nomsUsuaris += doc.getString("name") + "\n";
             }
-            textView.setText(nomsUsuaris);
+            //numUsers.setText(nomsUsuaris);
         }
     };
 
@@ -140,11 +138,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         db.collection("users").document(userId).update("room", FieldValue.delete());
         super.onDestroy();
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
-        super.onSaveInstanceState(outState, outPersistentState);
     }
 
     private void getOrRegisterUser(){
@@ -211,6 +204,11 @@ public class MainActivity extends AppCompatActivity {
     public void ShowUsers (View view){
         Intent intent = new Intent(this, ShowUsersActivity.class);
         startActivity(intent);
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
+        super.onSaveInstanceState(outState, outPersistentState);
     }
 
     class ViewHolder extends RecyclerView.ViewHolder{
