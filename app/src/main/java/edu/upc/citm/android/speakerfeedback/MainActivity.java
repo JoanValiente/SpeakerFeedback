@@ -120,8 +120,6 @@ public class MainActivity extends AppCompatActivity {
 
         userRegistration = db.collection("users").whereEqualTo("rooms", "testroom").addSnapshotListener(usersListener);
 
-        pollsRegistration =  db.collection("rooms").document("testroom").collection("polls").addSnapshotListener(pollsListener);
-
         db.collection("rooms").document("testroom").collection("polls").orderBy("start", Query.Direction.DESCENDING).addSnapshotListener(this, pollsListener);
 
         super.onStart();
