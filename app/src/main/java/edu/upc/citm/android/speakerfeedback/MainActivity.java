@@ -1,31 +1,38 @@
 package edu.upc.citm.android.speakerfeedback;
 
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.CardView;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.DocumentSnapshot;
 import com.google.firebase.firestore.EventListener;
-import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FieldValue;
+import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.FirebaseFirestoreException;
 import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.Query;
 import com.google.firebase.firestore.QuerySnapshot;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
@@ -38,7 +45,10 @@ public class MainActivity extends AppCompatActivity {
     private ListenerRegistration roomRegistration;
     private ListenerRegistration userRegistration;
     private ListenerRegistration pollsRegistration;
-    private List<Poll> polls;
+    private List<Poll> polls = new ArrayList<>();
+    private Adapter adapter;
+    private RecyclerView polls_views;
+    private Button vote_button;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,9 +57,14 @@ public class MainActivity extends AppCompatActivity {
 
         textView = findViewById(R.id.textView);
 
+        adapter = new Adapter();
+        polls_views = findViewById(R.id.polsView);
+        polls_views.setLayoutManager(new LinearLayoutManager(this));
+        polls_views.setAdapter(adapter);
+        textView = findViewById(R.id.num_users_view);
+        vote_button = findViewById(R.id.vote_btn);
+
         getOrRegisterUser();
-
-
     }
 
     private EventListener<DocumentSnapshot> roomListener = new EventListener<DocumentSnapshot>() {
@@ -86,13 +101,16 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e)
         {
-            polls = new ArrayList<>();
+            polls.clear();
 
             for(DocumentSnapshot doc : documentSnapshots)
             {
                 Poll poll = doc.toObject(Poll.class);
+                poll.setHash_question(doc.getId());
                 polls.add(poll);
             }
+
+            adapter.notifyDataSetChanged();
         }
     };
 
@@ -103,6 +121,8 @@ public class MainActivity extends AppCompatActivity {
         userRegistration = db.collection("users").whereEqualTo("rooms", "testroom").addSnapshotListener(usersListener);
 
         pollsRegistration =  db.collection("rooms").document("testroom").collection("polls").addSnapshotListener(pollsListener);
+
+        db.collection("rooms").document("testroom").collection("polls").orderBy("start", Query.Direction.DESCENDING).addSnapshotListener(this, pollsListener);
 
         super.onStart();
     }
@@ -193,5 +213,90 @@ public class MainActivity extends AppCompatActivity {
     public void ShowUsers (View view){
         Intent intent = new Intent(this, ShowUsersActivity.class);
         startActivity(intent);
+    }
+
+    class ViewHolder extends RecyclerView.ViewHolder{
+        private TextView label_view;
+        private TextView question_view;
+        private TextView options_view;
+        private CardView card_view;
+        public ViewHolder(View itemView) {
+            super(itemView);
+            card_view = itemView.findViewById(R.id.card_view);
+            label_view = itemView.findViewById(R.id.label_view);
+            question_view = itemView.findViewById(R.id.question_view);
+            options_view = itemView.findViewById(R.id.options_view);
+        }
+    }
+    class Adapter extends RecyclerView.Adapter<ViewHolder>
+    {
+        @NonNull
+        @Override
+        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View itemView = getLayoutInflater().inflate(R.layout.pols_view,parent,false);
+            return new ViewHolder(itemView);
+        }
+        @Override
+        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
+            Poll poll = polls.get(position);
+            if(position == 0)
+            {
+                holder.label_view.setVisibility(View.VISIBLE);
+                if(poll.isOpen()) {
+                    holder.label_view.setText("Active");
+                    vote_button.setTextColor(0xFF00AA00);
+                    vote_button.setClickable(true);
+                }
+                else
+                {
+                    holder.label_view.setText("Previous");
+                    vote_button.setTextColor(0xFFAA0000);
+                    vote_button.setClickable(false);
+
+                }
+            }
+            else
+            {
+                if(!poll.isOpen() && polls.get(position-1).isOpen())
+                {
+                    holder.label_view.setVisibility(View.VISIBLE);
+                    holder.label_view.setText("Previous");
+                }
+                else
+                {
+                    holder.label_view.setVisibility(View.GONE);
+                }
+            }
+            holder.card_view.setCardElevation(poll.isOpen() ? 10.0f : 0.0f);
+            if(!poll.isOpen())
+            {
+                holder.card_view.setCardBackgroundColor(0xFFE0E0E0);
+            }
+            holder.question_view.setText(poll.getQuestion());
+            holder.options_view.setText(poll.getOptionsAsString());
+        }
+        @Override
+        public int getItemCount() {
+            return polls.size();
+        }
+    }
+
+    public void OnClickButton(View view)
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        String[] options = new String[polls.get(0).getOptions().size()];
+        int i = 0;
+        for(String string: polls.get(0).getOptions()) {
+            options[i] = string;
+            ++i;
+        }
+        builder.setTitle(polls.get(0).getQuestion()).setItems(options, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        });
+        AlertDialog dialog = builder.create();
+        dialog.show();
     }
 }
