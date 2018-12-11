@@ -77,6 +77,24 @@ public class FirestoreListenerService extends Service
                 Log.e("SpeakerFeedback", "Error al rebre polls", e);
                 return;
             }
+
+            for (DocumentSnapshot doc : documentSnapshots)
+            {
+                Poll poll = doc.toObject(Poll.class);
+                if(poll.isOpen())
+                {
+                    Log.d("SpeakerFeedback", poll.getQuestion());
+                    Intent intent = new Intent(FirestoreListenerService.this, MainActivity.class);
+                    PendingIntent pendingIntent = PendingIntent.getActivity(FirestoreListenerService.this, 0, intent, 0);
+                    Notification notification = new NotificationCompat.Builder(FirestoreListenerService.this, App.channel_ID).setContentTitle("New poll: " +String.format(poll.getQuestion()))
+                            .setSmallIcon(R.drawable.ic_message)
+                            .setContentIntent(pendingIntent)
+                            .setVibrate(new long[] { 250, 250, 250, 250, 250 })
+                            .setAutoCancel(true)
+                            .build();
+                    startForeground(1, notification);
+                }
+            }
         }
     };
 }
