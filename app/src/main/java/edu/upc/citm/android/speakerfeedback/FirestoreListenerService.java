@@ -7,10 +7,18 @@ import android.content.Intent;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
+
+import com.google.firebase.firestore.DocumentSnapshot;
+import com.google.firebase.firestore.EventListener;
+import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.FirebaseFirestoreException;
+import com.google.firebase.firestore.QuerySnapshot;
 
 public class FirestoreListenerService extends Service
 {
     private boolean connected = false;
+    private FirebaseFirestore db = FirebaseFirestore.getInstance();
 
     @Override
     public void onCreate()
@@ -25,6 +33,11 @@ public class FirestoreListenerService extends Service
         {
             createForegroundNotification();
         }
+
+        db.collection("rooms").document("testroom")
+                .collection("polls").whereEqualTo("open", true)
+                .addSnapshotListener(pollListener);
+
 
         return START_NOT_STICKY;
     }
@@ -56,4 +69,14 @@ public class FirestoreListenerService extends Service
     {
         return null;
     }
+
+    private EventListener<QuerySnapshot> pollListener = new EventListener<QuerySnapshot>(){
+        @Override
+        public void onEvent(QuerySnapshot documentSnapshots, FirebaseFirestoreException e) {
+            if (e != null) {
+                Log.e("SpeakerFeedback", "Error al rebre polls", e);
+                return;
+            }
+        }
+    };
 }
