@@ -12,6 +12,8 @@ import android.support.v7.widget.CardView;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -65,6 +67,15 @@ public class MainActivity extends AppCompatActivity {
 
         getOrRegisterUser();
         startFirestoreListenerService();
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
+        boolean ret = true;
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_options,menu);
+        return ret;
     }
 
     private void enterRoom()
