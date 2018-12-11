@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -64,6 +65,11 @@ public class MainActivity extends AppCompatActivity {
 
         getOrRegisterUser();
         startFirestoreListenerService();
+    }
+
+    private void enterRoom()
+    {
+        db.collection("users").document(userId).update("Room", "last_active", new Date());
     }
 
     private void startFirestoreListenerService()
@@ -160,7 +166,7 @@ public class MainActivity extends AppCompatActivity {
         } else {
             // Ja està registrat, mostrem el id al Log
             Log.i("SpeakerFeedback", "userId = " + userId);
-            db.collection("users").document(userId).update("room", "testroom");
+            enterRoom();
         }
     }
 
@@ -194,6 +200,7 @@ public class MainActivity extends AppCompatActivity {
                 prefs.edit()
                         .putString("userId", userId)
                         .commit();
+                enterRoom();
                 Log.i("SpeakerFeedback", "New user: userId = " + userId);
             }
 
@@ -203,7 +210,6 @@ public class MainActivity extends AppCompatActivity {
                 Log.e("SpeakerFeedback", "Error creant objecte", e);
                 Toast.makeText(MainActivity.this,
                         "No s'ha pogut registrar l'usuari, intenta-ho més tard", Toast.LENGTH_SHORT).show();
-                db.collection("users").document(userId).update("room", "testroom");
                 finish();
             }
         });
