@@ -36,6 +36,7 @@ import com.google.firebase.firestore.QuerySnapshot;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Date;
 
@@ -45,9 +46,6 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
     private TextView numUsers;
     private String userId;
-    private ListenerRegistration roomRegistration;
-    private ListenerRegistration userRegistration;
-    private ListenerRegistration pollsRegistration;
     private List<Poll> polls = new ArrayList<>();
     private Adapter adapter;
     private RecyclerView polls_views;
@@ -95,7 +93,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void enterRoom()
     {
-        db.collection("users").document(userId).update("Room", "last_active", new Date());
+        db.collection("users").document(userId).update("room", "testroom", "last_active", new Date());
     }
 
     private void startFirestoreListenerService()
@@ -160,23 +158,13 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onStart() {
-        roomRegistration = db.collection("rooms").document("testroom").addSnapshotListener(roomListener);
+        db.collection("rooms").document("testroom").addSnapshotListener(roomListener);
 
-        userRegistration = db.collection("users").whereEqualTo("rooms", "testroom").addSnapshotListener(usersListener);
+        db.collection("users").whereEqualTo("rooms", "testroom").addSnapshotListener(usersListener);
 
         db.collection("rooms").document("testroom").collection("polls").orderBy("start", Query.Direction.DESCENDING).addSnapshotListener(this, pollsListener);
 
         super.onStart();
-    }
-
-
-    @Override
-    protected void onStop() {
-
-        roomRegistration.remove();
-        userRegistration.remove();
-
-        super.onStop();
     }
 
 
