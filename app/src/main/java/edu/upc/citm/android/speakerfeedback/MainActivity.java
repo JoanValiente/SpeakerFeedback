@@ -14,6 +14,7 @@ import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -78,6 +79,20 @@ public class MainActivity extends AppCompatActivity {
         return ret;
     }
 
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        boolean ret = true;
+        switch (item.getItemId())
+        {
+            case R.id.logout_item:
+                stopFirestoreListenerService();
+                finish();
+                break;
+        }
+        return ret;
+    }
+
     private void enterRoom()
     {
         db.collection("users").document(userId).update("Room", "last_active", new Date());
@@ -88,6 +103,12 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(this, FirestoreListenerService.class);
         intent.putExtra("room", "testroom");
         startService(intent);
+    }
+
+    private void stopFirestoreListenerService()
+    {
+        Intent intent = new Intent(this, FirestoreListenerService.class);
+        stopService(intent);
     }
 
     private EventListener<DocumentSnapshot> roomListener = new EventListener<DocumentSnapshot>() {
