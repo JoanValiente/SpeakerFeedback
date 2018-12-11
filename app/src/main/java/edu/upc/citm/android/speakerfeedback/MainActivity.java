@@ -63,6 +63,14 @@ public class MainActivity extends AppCompatActivity {
         vote_button = findViewById(R.id.vote_btn);
 
         getOrRegisterUser();
+        startFirestoreListenerService();
+    }
+
+    private void startFirestoreListenerService()
+    {
+        Intent intent = new Intent(this, FirestoreListenerService.class);
+        intent.putExtra("room", "testroom");
+        startService(intent);
     }
 
     private EventListener<DocumentSnapshot> roomListener = new EventListener<DocumentSnapshot>() {
