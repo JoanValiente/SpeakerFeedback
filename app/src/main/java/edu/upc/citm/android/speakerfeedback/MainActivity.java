@@ -192,10 +192,15 @@ public class MainActivity extends AppCompatActivity {
         } else {
             // Ja està registrat, mostrem el id al Log
             Log.i("SpeakerFeedback", "userId = " + userId);
-            enterRoom();
+            selectRoom();
         }
     }
 
+    private void selectRoom()
+    {
+        Intent intent = new Intent(this,EnterIDRoom.class);
+        startActivity(intent);
+    }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {

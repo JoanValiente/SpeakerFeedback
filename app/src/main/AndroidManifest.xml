@@ -20,6 +20,7 @@
         <activity android:name=".RegisterUserActivity" />
         <activity android:name=".ShowUsersActivity" />
         <service android:name=".FirestoreListenerService" />
+        <activity android:name=".EnterIDRoom"></activity>
     </application>
 
 </manifest>
