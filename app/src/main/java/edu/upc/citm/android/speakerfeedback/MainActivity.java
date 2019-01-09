@@ -43,6 +43,7 @@ import java.util.Date;
 public class MainActivity extends AppCompatActivity {
 
     private static final int REGISTER_USER = 0;
+    private static final int ROOM_ID = 1;
     private FirebaseFirestore db = FirebaseFirestore.getInstance();
     private TextView numUsers;
     private String userId;
@@ -50,6 +51,8 @@ public class MainActivity extends AppCompatActivity {
     private Adapter adapter;
     private RecyclerView polls_views;
     private Button vote_button;
+
+    private String roomID;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -93,13 +96,13 @@ public class MainActivity extends AppCompatActivity {
 
     private void enterRoom()
     {
-        db.collection("users").document(userId).update("room", "testroom", "last_active", new Date());
+        db.collection("users").document(userId).update("room", roomID, "last_active", new Date());
     }
 
     private void startFirestoreListenerService()
     {
         Intent intent = new Intent(this, FirestoreListenerService.class);
-        intent.putExtra("room", "testroom");
+        intent.putExtra("room", roomID);
         startService(intent);
     }
 
@@ -116,8 +119,11 @@ public class MainActivity extends AppCompatActivity {
                 Log.e("SpeakerFeedback", "Error al rebre rooms/testroom", e);
                 return;
             }
-            if(documentSnapshot.getBoolean("open") == false) {
+            if(!documentSnapshot.contains("open") || !documentSnapshot.getBoolean("open")) {
                 stopFirestoreListenerService();
+                db.collection("users").document(userId).update(
+                        "room", FieldValue.delete());
+                selectRoom();
                 finish();
             }
             else {
@@ -164,11 +170,15 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onStart() {
-        db.collection("rooms").document("testroom").addSnapshotListener(roomListener);
+        if(roomID == null)
+            selectRoom();
 
-        db.collection("users").whereEqualTo("rooms", "testroom").addSnapshotListener(usersListener);
+        else {
+            db.collection("rooms").document(roomID).addSnapshotListener(this, roomListener);
+            db.collection("users").whereEqualTo("rooms", roomID).addSnapshotListener(usersListener);
+            db.collection("rooms").document(roomID).collection("polls").orderBy("start", Query.Direction.DESCENDING).addSnapshotListener(this, pollsListener);
 
-        db.collection("rooms").document("testroom").collection("polls").orderBy("start", Query.Direction.DESCENDING).addSnapshotListener(this, pollsListener);
+        }
 
         super.onStart();
     }
@@ -199,7 +209,7 @@ public class MainActivity extends AppCompatActivity {
     private void selectRoom()
     {
         Intent intent = new Intent(this,EnterIDRoom.class);
-        startActivity(intent);
+        startActivityForResult(intent, ROOM_ID);
     }
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -212,6 +222,10 @@ public class MainActivity extends AppCompatActivity {
                     Toast.makeText(this, "Has de registrar un nom", Toast.LENGTH_SHORT).show();
                     finish();
                 }
+            case ROOM_ID:
+                roomID = data.getStringExtra("room_id");
+                startFirestoreListenerService();
+                enterRoom();
                 break;
             default:
                 super.onActivityResult(requestCode, resultCode, data);
@@ -340,7 +354,7 @@ public class MainActivity extends AppCompatActivity {
                 Map<String,Object> map = new HashMap<>();
                 map.put("pollid", polls.get(0).getHash_question());
                 map.put("option", which);
-                db.collection("rooms").document("testroom").collection("votes").document(userId).set(map);
+                db.collection("rooms").document(roomID).collection("votes").document(userId).set(map);
             }
         });
         AlertDialog dialog = builder.create();
