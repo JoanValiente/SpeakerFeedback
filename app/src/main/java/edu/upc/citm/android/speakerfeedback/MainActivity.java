@@ -53,14 +53,14 @@ public class MainActivity extends AppCompatActivity {
     private Button vote_button;
 
     private String roomID;
+    private App app;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-
         adapter = new Adapter();
+        app = (App)getApplication();
         polls_views = findViewById(R.id.polsView);
         polls_views.setLayoutManager(new LinearLayoutManager(this));
         polls_views.setAdapter(adapter);
@@ -93,6 +93,13 @@ public class MainActivity extends AppCompatActivity {
         }
         return ret;
     }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        app.Save();
+    }
+
 
     private void enterRoom()
     {
